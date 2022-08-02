@@ -1,0 +1,95 @@
+﻿@{
+    ViewData["Title"] = "Claims";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+
+    <form action="~/Home/CalculateCumulativeClaimsData"
+          enctype="multipart/form-data" onsubmit="AJAXSubmit(this);return false;"
+          method="post">
+        <dl>
+            <dt>
+                <label for="incrementalClaimsDataFile">Upload incremental claims data file</label>
+            </dt>
+
+
+            <dd>
+                <div class="custom-file tab-content" style="width:fit-content">
+                    <input class="custom-file-input" id="incrementalClaimsDataFile" type="file" accept=".csv" name="FileUpload.FormFile" required />
+                    <label class="custom-file-label align-content-center" id="fileLabel" for="incrementalClaimsDataFile">Choose file...</label>
+                </div>
+            </dd>
+        </dl>
+
+        <input class="btn btn-primary" type="submit" value="Calculate Cumulative Claims Data" />
+
+        <div id="resultDiv" style="margin-top:15px; visibility: hidden">
+            <label for="result">The result:</label>
+            <br />
+            <p style="white-space: pre-line" id="result"></p>
+            <input class="btn btn-secondary" type="button" onclick="download();" value="Download" />
+        </div>
+    </form>
+
+    <script>
+        $(document).ready(function () {
+            $('#incrementalClaimsDataFile').on("change", function () {
+                console.log("change fire");
+                var file = $('#incrementalClaimsDataFile')[0].files[0].name;
+                console.log(file);
+                $('#fileLabel').text(file);
+                $("#resultDiv").css("visibility", "hidden");
+            });
+        });
+
+        async function AJAXSubmit(oFormElement) {
+
+            try {
+                var formData = new FormData();
+                formData.append('claimsDataFile', $('#incrementalClaimsDataFile')[0].files[0]);
+                var resultElement = oFormElement.elements.namedItem("result");
+                var _url = '@Url.Action("CalculateCumulativeClaimsData", "Home")';
+
+                $.ajax({
+                    url: _url,
+                    headers: {
+                        Accept: "text/csv; charset=utf-8"
+                    },
+                    type: 'POST',
+                    data: formData,
+                    processData: false,  // tell jQuery not to process the data
+                    contentType: false,  // tell jQuery not to set contentType
+                    success: function (result) {
+                        $('#result').text(result);
+                        $("#resultDiv").css("visibility", "visible");
+                    },
+                    error: function (jqXHR) {
+                        alert("Error");
+                    },
+                    complete: function (jqXHR, status) {
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function download() {
+
+            const text = $('#result').text();
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', 'accumilated_triangles.csv');
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+
+    </script>
+</div>
